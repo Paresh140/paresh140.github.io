@@ -7,14 +7,14 @@ module.exports = {
     // You can overwrite values here that are used for the SEO component
     // You can also add new values here to query them like usual
     // See all options: https://github.com/LekoArts/gatsby-themes/blob/main/themes/gatsby-theme-cara/gatsby-config.js
-    siteTitle: `Paresh`,
-    siteTitleAlt: `Paresh Subedi`,
-    siteHeadline: `Paresh Subedi Portfolio`,
+    siteTitle: `Paresh Subedi`,
+    siteTitleAlt: `Paresh Subedi — Data Science Portfolio`,
+    siteHeadline: `Paresh Subedi · Data Science Portfolio`,
     siteUrl: `https://pareshsubedi.com.np`,
-    siteDescription: `Portfolio`,
+    siteDescription: `Data science portfolio of Paresh Subedi — Fordham M.S., research, and applied ML projects.`,
     siteLanguage: `en`,
     siteImage: `/banner.jpg`,
-    author: `Paresh`,
+    author: `Paresh Subedi`,
   },
   plugins: [
     {
@@ -25,9 +25,9 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `Cara - @lekoarts/gatsby-theme-cara`,
-        short_name: `Cara`,
-        description: `Playful and Colorful One-Page portfolio featuring Parallax effects and animations`,
+        name: `Paresh Subedi`,
+        short_name: `Paresh`,
+        description: `Data science portfolio of Paresh Subedi`,
         start_url: `/`,
         background_color: `#141821`,
         // This will impact how browsers show your PWA/website
