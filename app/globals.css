@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: #05060a;
+}
+
+body {
+  background-color: #05060a;
+  min-height: 100vh;
+}
+
+/* Glass panel: a translucent fill, a 1px gradient border and a faint scanline overlay. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.55), rgba(255, 46, 136, 0.3) 50%, rgba(255, 184, 0, 0.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+  z-index: -1;
+}
+
+.glass-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.glass-chip:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Holographic label above a hovered galaxy cluster. */
+.holo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  background: rgba(5, 6, 10, 0.55);
+  border-radius: 6px;
+  font-family: var(--font-mono), monospace;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.25);
+  animation: holo-flicker 3s infinite;
+}
+
+.holo-tag {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #00f0ff;
+}
+
+.holo-title {
+  font-size: 12px;
+  color: #c9d3e0;
+}
+
+.node-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-left: 6px;
+  vertical-align: -0.1em;
+  background: #00f0ff;
+  animation: blink 1s steps(1) infinite;
+}
+
+/* Faint drifting noise field behind everything. */
+.noise-field {
+  position: fixed;
+  inset: -50%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: drift 26s linear infinite;
+}
+
+/* Scanline overlay across the whole viewport. */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 4px);
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -4rem;
+  z-index: 200;
+  padding: 0.5rem 0.75rem;
+  background: #05060a;
+  color: #00f0ff;
+  border: 1px solid #00f0ff;
+  border-radius: 6px;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Easter egg: overfitting mode. Everything memorises the colour and jitters. */
+html.overfit {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) contrast(1.15);
+}
+
+html.overfit main section {
+  animation: jitter 0.2s steps(2) infinite;
+}
+
+/* Easter egg: matrix mode. */
+html.matrix body {
+  color: #39ff88;
+}
+
+html.matrix .glass {
+  border-color: rgba(57, 255, 136, 0.4);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translate(-6%, 4%);
+  }
+}
+
+@keyframes jitter {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(0.6px, -0.4px);
+  }
+}
+
+@keyframes holo-flicker {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.6;
+  }
+}
+
+/* Reduced motion: stop the ambient animations. The 3D scene holds still too. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .noise-field {
+    display: none;
+  }
+}
