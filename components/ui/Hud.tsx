@@ -10,6 +10,7 @@ export default function Hud({ particles }: { particles: number }) {
   const pass = useRef<HTMLSpanElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   const denoise = useRef<HTMLSpanElement>(null);
+  const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -18,6 +19,8 @@ export default function Hud({ particles }: { particles: number }) {
       const pct = Math.round(live.progress * 100);
       if (pass.current) pass.current.textContent = `${pct}%`;
       if (bar.current) bar.current.style.width = `${pct}%`;
+      // Stay out of the hero, where the call-to-action buttons sit.
+      if (root.current) root.current.style.opacity = live.activeSection === 0 ? '0' : '1';
       if (denoise.current) denoise.current.textContent = `${Math.round((1 - live.heroT) * 1000)}`;
       raf = requestAnimationFrame(tick);
     };
@@ -26,7 +29,7 @@ export default function Hud({ particles }: { particles: number }) {
   }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 hidden md:block">
+    <div ref={root} className="pointer-events-none fixed bottom-4 right-4 z-40 hidden opacity-0 transition-opacity duration-500 md:block">
       <aside aria-label="Site metrics" className="glass w-56 p-3 font-mono text-[11px] text-dim">
         <div className="flex justify-between">
           <span>FPS</span>
@@ -45,7 +48,7 @@ export default function Hud({ particles }: { particles: number }) {
             <span>forward pass</span>
             <span className="text-output" ref={pass}>0%</span>
           </div>
-          <div className="mt-1 h-[3px] w-full bg-white/10">
+          <div className="mt-1 h-[3px] w-full bg-line/10">
             <div ref={bar} className="h-full bg-gradient-to-r from-signal to-output" style={{ width: '0%' }} />
           </div>
         </div>

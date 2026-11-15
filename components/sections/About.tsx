@@ -1,15 +1,15 @@
 'use client';
 
-// Layer 1. A Hugging Face–style model card. The wireframe net behind it pulses as you read.
+// (01) About. A large statement up top, then the model card and the headline numbers.
 import { profile, stats } from '@/data/profile';
 import { education } from '@/data/experience';
 import Counter from '../ui/Counter';
-import GlassPanel from '../ui/GlassPanel';
 import Reveal from '../ui/Reveal';
+import SectionLabel from '../ui/SectionLabel';
 
 const ROWS: [string, string][] = [
   ['Model', 'Paresh-v2026'],
-  ['Architecture', 'Data Scientist + Systems Thinker'],
+  ['Architecture', 'Data scientist + systems thinker'],
   ['Training data', profile.trainingData],
   ['Intended use', profile.intendedUse],
   ['Known limitations', profile.limitations],
@@ -17,46 +17,50 @@ const ROWS: [string, string][] = [
 
 export default function About() {
   return (
-    <section id="about" data-layer="1" className="relative flex min-h-screen items-center px-4 py-24 md:px-16">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 md:grid-cols-[1.25fr_1fr]">
+    <section id="about" data-layer="1" className="relative px-4 py-28 md:px-8 md:py-40">
+      <SectionLabel n={1} wake="About" train="model card" />
+
+      <Reveal>
+        <p className="mt-10 max-w-[18ch] text-[clamp(2.2rem,6vw,5.75rem)] font-medium leading-[0.98] tracking-[-0.045em] text-ink md:ml-[16vw]">
+          I make language models <span className="serif text-signal">leaner</span>, and data{' '}
+          <span className="serif text-signal">useful</span>.
+        </p>
+      </Reveal>
+
+      <div className="mt-20 grid gap-10 md:ml-[16vw] md:grid-cols-[1.3fr_1fr] md:gap-16">
         <Reveal>
-          <GlassPanel className="p-6 md:p-8">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">model card</p>
-            <h2 className="mt-2 font-display text-3xl font-semibold text-ink">Paresh-v2026</h2>
+          <p className="max-w-xl text-base leading-relaxed text-ink md:text-lg">{profile.bio}</p>
 
-            <dl className="mt-6 divide-y divide-white/10 text-sm">
-              {ROWS.map(([k, v]) => (
-                <div key={k} className="grid gap-1 py-3 md:grid-cols-[10rem_1fr] md:gap-4">
-                  <dt className="font-mono text-xs uppercase tracking-[0.12em] text-dim">{k}</dt>
-                  <dd className="text-ink">{v}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <p className="mt-6 text-sm leading-relaxed text-dim">{profile.bio}</p>
-          </GlassPanel>
+          <dl className="mt-10 divide-y divide-line/10 border-y border-line/10 text-sm">
+            {ROWS.map(([k, v]) => (
+              <div key={k} className="grid gap-1 py-3 md:grid-cols-[11rem_1fr] md:gap-4">
+                <dt className="label text-dim">{k}</dt>
+                <dd className="text-ink">{v}</dd>
+              </div>
+            ))}
+          </dl>
         </Reveal>
 
-        <Reveal delay={0.15} className="flex flex-col gap-4">
+        <Reveal delay={0.15} className="flex flex-col">
           {stats.map((s) => (
-            <GlassPanel key={s.label} className="p-5">
-              <p className="font-mono text-4xl font-semibold text-output md:text-5xl">
-                <Counter value={s.value} decimals={s.decimals ?? 0} suffix={s.suffix} />
+            <div key={s.label} className="border-t border-line/10 py-5">
+              <p className="text-6xl font-medium tracking-[-0.04em] text-ink md:text-7xl">
+                <Counter value={s.value} decimals={s.decimals ?? 0} suffix={s.suffix} className="font-display" />
               </p>
               <p className="mt-2 text-sm text-ink">{s.label}</p>
-              <p className="font-mono text-[11px] text-dim">{s.note}</p>
-            </GlassPanel>
+              <p className="label mt-1 text-dim">{s.note}</p>
+            </div>
           ))}
-          <GlassPanel className="p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-dim">education</p>
-            <ul className="mt-2 space-y-2 text-sm text-ink">
+          <div className="border-t border-line/10 pt-5">
+            <p className="label text-dim">Education</p>
+            <ul className="mt-3 space-y-2 text-sm text-ink">
               {education.map((e) => (
                 <li key={e.degree}>
                   {e.degree} <span className="text-dim">· {e.school}</span>
                 </li>
               ))}
             </ul>
-          </GlassPanel>
+          </div>
         </Reveal>
       </div>
     </section>

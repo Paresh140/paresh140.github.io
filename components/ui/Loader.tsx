@@ -69,24 +69,33 @@ export default function Loader() {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-void transition-all duration-700 ${
-        leaving ? 'scale-[1.04] opacity-0' : 'opacity-100'
+      className={`fixed inset-0 z-[100] flex flex-col justify-between bg-void p-4 transition-all duration-700 md:p-8 ${
+        leaving ? '-translate-y-full' : 'translate-y-0'
       }`}
+      style={{ transitionTimingFunction: 'cubic-bezier(0.7, 0, 0.2, 1)' }}
     >
-      <div className="w-[min(560px,88vw)] font-mono text-sm">
-        <p className="mb-4 text-xs uppercase tracking-[0.25em] text-dim">latent-space / train.log</p>
-        <div className="min-h-[9rem] space-y-1 text-ink">
-          {lines.map((l, i) => (
-            <p key={i} className={l === 'converged.' ? 'text-output' : ''}>
-              <span className="text-dim">&gt; </span>
-              {l}
-            </p>
-          ))}
+      <div className="label flex justify-between text-dim">
+        <span>Paresh Subedi</span>
+        <span>press any key to skip</span>
+      </div>
+
+      <div className="grid items-end gap-6 md:grid-cols-[1fr_min(440px,40vw)]">
+        <p className="mega text-[clamp(6rem,26vw,24rem)] tabular-nums text-ink" aria-label={`${Math.round(progress)} percent`}>
+          {String(Math.round(progress)).padStart(3, '0')}
+        </p>
+        <div className="pb-[2vw] font-mono text-xs">
+          <div className="min-h-[8.5rem] space-y-1 text-dim">
+            {lines.map((l, i) => (
+              <p key={i} className={l === 'converged.' ? 'text-signal' : ''}>
+                <span className="opacity-60">&gt; </span>
+                {l}
+              </p>
+            ))}
+          </div>
+          <div className="mt-4 h-px w-full bg-line/15">
+            <div className="h-full bg-ink transition-[width] duration-500" style={{ width: `${progress}%` }} />
+          </div>
         </div>
-        <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-white/10">
-          <div className="h-full bg-gradient-to-r from-loss via-signal to-output transition-[width] duration-500" style={{ width: `${progress}%` }} />
-        </div>
-        <p className="mt-3 text-[11px] text-dim">press any key to skip</p>
       </div>
     </div>
   );

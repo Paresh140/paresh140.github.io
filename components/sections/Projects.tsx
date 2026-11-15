@@ -1,118 +1,132 @@
 'use client';
 
-// Layer 2. The Embedding Galaxy. Clusters live in the 3D layer behind this section,
-// and this DOM layer owns the clicks, the keyboard path and the grid view.
+// (02) Selected work. The cards start as a tilted wall seen from above and settle
+// flat as the section scrolls into view. In Train mode the embedding galaxy sits
+// behind them, and opening a card flies the camera into that project's cluster.
 import { useRef } from 'react';
-import { projects } from '@/data/projects';
-import { live } from '@/lib/live';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { projects, type Project } from '@/data/projects';
 import { useStore } from '@/lib/store';
 import { useCaps } from '@/lib/caps';
 import Counter from '../ui/Counter';
 import Reveal from '../ui/Reveal';
+import SectionLabel from '../ui/SectionLabel';
 import ProjectDetail from './ProjectDetail';
 
 const CLUSTER_TAG = { signal: 'data', loss: 'learning', output: 'output' } as const;
 
 export default function Projects() {
-  const view = useStore((s) => s.galaxyView);
-  const setView = useStore((s) => s.setGalaxyView);
-  const setFocused = useStore((s) => s.setFocusedProject);
   const focused = useStore((s) => s.focusedProject);
   const caps = useCaps();
-  const stage = useRef<HTMLDivElement>(null);
+  const wall = useRef<HTMLDivElement>(null);
 
-  // Phones and low-end devices get the 2D grid. It is the same content, with less GPU work.
-  const effective = caps.mobile ? 'grid' : view;
-  const galaxy = effective === 'galaxy';
-
-  // Clicks on the galaxy stage open whichever cluster is under the pointer.
-  const onStageClick = () => {
-    const i = live.hoverCluster;
-    if (i >= 0) setFocused(projects[i].id);
-  };
+  const { scrollYProgress } = useScroll({ target: wall, offset: ['start end', 'start 0.15'] });
+  const p = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 });
+  const flat = caps.mobile || caps.reduced;
+  const rotateX = useTransform(p, [0, 1], [flat ? 0 : 38, 0]);
+  const rotateZ = useTransform(p, [0, 1], [flat ? 0 : -14, 0]);
+  const scale = useTransform(p, [0, 1], [flat ? 1 : 0.82, 1]);
+  const y = useTransform(p, [0, 1], [flat ? 0 : 120, 0]);
 
   return (
-    <section id="projects" data-layer="2" className="relative min-h-screen px-4 py-24 md:px-16">
-      {galaxy && (
-        <div ref={stage} onClick={onStageClick} className="pointer-events-auto absolute inset-0 z-0" aria-hidden />
-      )}
+    <section id="projects" data-layer="2" className="relative px-4 py-28 md:px-8 md:py-40">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <SectionLabel n={2} wake="Selected work" train="embedding space" />
+          <Reveal>
+            <h2 className="mega mt-6 text-[clamp(3.5rem,11vw,10rem)] text-ink">
+              Work<span className="serif text-signal">.</span>
+            </h2>
+          </Reveal>
+        </div>
+        <p className="max-w-sm text-sm leading-relaxed text-dim">
+          {projects.length} projects across research, deep learning, agents and analytics. Open one for the problem, the approach
+          and a live diagram.
+        </p>
+      </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">layer 02 · embedding space</p>
-          <h2 className="mt-2 font-display text-4xl font-semibold text-ink md:text-6xl">The Embedding Galaxy</h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-dim md:text-base">
-            Each cluster is a project. Hover to expand one, click to fly inside. Colour carries meaning:
-            <span className="text-signal"> cyan = data</span>,<span className="text-loss"> magenta = learning</span>,
-            <span className="text-output"> amber = output</span>.
-          </p>
-        </Reveal>
-
-        {!caps.mobile && (
-          <div className="mt-8 flex items-center gap-3 font-mono text-xs" role="group" aria-label="View as">
-            <span className="text-dim">View as:</span>
-            {(['galaxy', 'grid'] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={view === v}
-                onClick={() => setView(v)}
-                className={`glass-chip px-3 py-1.5 uppercase tracking-[0.15em] ${view === v ? 'text-signal' : 'text-dim hover:text-ink'}`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {galaxy ? (
-          <ul className="mt-10 grid gap-3 md:grid-cols-2" aria-label="Projects">
-            {projects.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => setFocused(p.id)}
-                  className="glass-chip flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
-                  aria-expanded={focused === p.id}
-                >
-                  <span>
-                    <span className="block font-mono text-[10px] text-dim">
-                      {p.id.toUpperCase()} · {CLUSTER_TAG[p.cluster]}
-                    </span>
-                    <span className="text-ink">{p.title}</span>
-                  </span>
-                  <span className="font-mono text-xs text-signal">open →</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul className="mt-10 grid gap-5 md:grid-cols-2" aria-label="Projects">
-            {projects.map((p, i) => (
-              <li key={p.id}>
-                <Reveal delay={i * 0.06} className="glass h-full p-6">
-                  <p className="font-mono text-[11px] text-dim">{String(i + 1).padStart(2, '0')} · {CLUSTER_TAG[p.cluster]}</p>
-                  <h3 className="mt-2 font-display text-xl font-semibold text-ink">{p.title}</h3>
-                  <p className="mt-2 text-sm text-dim">{p.short}</p>
-                  <p className="mt-4 font-mono text-2xl text-output">
-                    <Counter value={p.metric.value} decimals={p.metric.decimals ?? 0} suffix={p.metric.suffix} />
-                  </p>
-                  <p className="font-mono text-[11px] text-dim">{p.metric.label}</p>
-                  <button
-                    type="button"
-                    onClick={() => setFocused(p.id)}
-                    className="mt-5 font-mono text-xs uppercase tracking-[0.15em] text-signal hover:underline"
-                  >
-                    open case study →
-                  </button>
-                </Reveal>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div ref={wall} className="wall mt-16">
+        <motion.ul
+          aria-label="Projects"
+          className="wall-plane grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          style={{ rotateX, rotateZ, scale, y, transformOrigin: '50% 0%' }}
+        >
+          {projects.map((proj, i) => (
+            <li key={proj.id}>
+              <Card project={proj} index={i} />
+            </li>
+          ))}
+        </motion.ul>
       </div>
 
       {focused && <ProjectDetail id={focused} />}
     </section>
+  );
+}
+
+function Card({ project, index }: { project: Project; index: number }) {
+  const setFocused = useStore((s) => s.setFocusedProject);
+  const focused = useStore((s) => s.focusedProject);
+
+  return (
+    <article className="wall-card glass group relative flex h-full min-h-[22rem] flex-col p-5">
+      <div className="label flex justify-between text-dim">
+        <span>{String(index + 1).padStart(2, '0')}</span>
+        <span>
+          {CLUSTER_TAG[project.cluster]} · {project.year}
+        </span>
+      </div>
+
+      <h3 className="mt-8 text-2xl font-medium leading-[1.05] tracking-[-0.03em] text-ink">
+        {/* The whole card is clickable through this button's ::after. */}
+        <button
+          type="button"
+          onClick={() => setFocused(project.id)}
+          aria-expanded={focused === project.id}
+          className="text-left after:absolute after:inset-0 after:rounded-[14px] after:content-[''] focus-visible:outline-none"
+        >
+          {project.title}
+        </button>
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-dim">{project.short}</p>
+
+      <div className="mt-auto pt-8">
+        {project.metric ? (
+          <>
+            <p className="text-5xl font-medium tracking-[-0.04em] text-ink">
+              <Counter
+                value={project.metric.value}
+                decimals={project.metric.decimals ?? 0}
+                suffix={project.metric.suffix}
+                className="font-display"
+              />
+            </p>
+            <p className="label mt-2 text-dim">{project.metric.label}</p>
+          </>
+        ) : (
+          <p className="label flex items-center gap-2 text-dim">
+            <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-output" />
+            {project.status ?? 'In progress'}
+          </p>
+        )}
+
+        <div className="label mt-6 flex items-center justify-between border-t border-line/10 pt-4">
+          <span className="text-ink transition-colors group-hover:text-signal">Open case →</span>
+          {project.github && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noreferrer"
+              className="relative z-10 text-dim hover:text-signal"
+              aria-label={`${project.title} on GitHub`}
+            >
+              GitHub ↗
+            </a>
+          )}
+        </div>
+      </div>
+      {/* Visible focus ring for the card-wide button. */}
+      <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[14px] ring-signal group-focus-within:ring-2" />
+    </article>
   );
 }

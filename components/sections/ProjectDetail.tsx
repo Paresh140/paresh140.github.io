@@ -26,13 +26,13 @@ export default function ProjectDetail({ id }: { id: string }) {
 
   return (
     <div className="fixed inset-x-3 bottom-3 top-20 z-30 md:inset-x-auto md:right-8 md:top-24 md:bottom-8 md:w-[480px]">
-      <GlassPanel className="flex h-full flex-col overflow-hidden">
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+      <GlassPanel className="glass-solid flex h-full flex-col overflow-hidden shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-line/10 p-5">
           <div>
             <p className="font-mono text-[11px] text-dim">
-              {String(index).padStart(2, '0')} · cluster · {project.cluster}
+              {String(index).padStart(2, '0')} · {project.year}
             </p>
-            <h3 className="mt-1 font-display text-2xl font-semibold text-ink">{project.title}</h3>
+            <h3 className="mt-1 text-2xl font-medium tracking-[-0.03em] text-ink">{project.title}</h3>
           </div>
           <button
             type="button"
@@ -54,15 +54,24 @@ export default function ProjectDetail({ id }: { id: string }) {
             <p className="mt-1 text-ink">{project.approach}</p>
           </div>
 
-          <Suspense fallback={<TensorFallback />}>
-            <ProjectVisual kind={project.visual} satellites={project.satellites} />
-          </Suspense>
+          {/* The diagrams are drawn for the dark palette, so they sit on a small Train-mode screen. */}
+          <div data-mode="train" className="rounded-xl bg-void p-3">
+            <Suspense fallback={<TensorFallback />}>
+              <ProjectVisual kind={project.visual} satellites={project.satellites} />
+            </Suspense>
+          </div>
 
-          <div className="glass-chip flex items-center justify-between px-4 py-3">
-            <span className="font-mono text-[11px] text-dim">{project.metric.label}</span>
-            <span className="font-mono text-2xl text-output">
-              <Counter value={project.metric.value} decimals={project.metric.decimals ?? 0} suffix={project.metric.suffix} />
-            </span>
+          <div className="flex items-center justify-between gap-4 border-y border-line/10 py-3">
+            {project.metric ? (
+              <>
+                <span className="label text-dim">{project.metric.label}</span>
+                <span className="font-mono text-2xl text-output">
+                  <Counter value={project.metric.value} decimals={project.metric.decimals ?? 0} suffix={project.metric.suffix} />
+                </span>
+              </>
+            ) : (
+              <span className="label text-dim">{project.status ?? 'In progress'} · results to come</span>
+            )}
           </div>
 
           <ul className="flex flex-wrap gap-2" aria-label="Stack">
@@ -74,9 +83,11 @@ export default function ProjectDetail({ id }: { id: string }) {
           </ul>
 
           <div className="flex gap-3 font-mono text-xs uppercase tracking-[0.15em]">
-            <a href={project.github} target="_blank" rel="noreferrer" className="glass-chip px-4 py-2 text-ink hover:text-signal">
-              GitHub ↗
-            </a>
+            {project.github && (
+              <a href={project.github} target="_blank" rel="noreferrer" className="glass-chip px-4 py-2 text-ink hover:text-signal">
+                GitHub ↗
+              </a>
+            )}
             {project.demo && (
               <a href={project.demo} target="_blank" rel="noreferrer" className="glass-chip px-4 py-2 text-ink hover:text-output">
                 Demo ↗

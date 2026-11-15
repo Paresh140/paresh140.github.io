@@ -2,30 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Colour tokens, as space-separated RGB so Tailwind can add alpha (text-ink/60).
+   Train is the dark latent-space palette; Wake is the light editorial one. */
+:root,
+[data-mode='train'] {
   color-scheme: dark;
+  --void: 5 6 10;
+  --ink: 201 211 224;
+  --dim: 107 118 137;
+  --line: 255 255 255;
+  --card: 255 255 255;
+  --signal: 0 240 255;
+  --loss: 255 46 136;
+  --output: 255 184 0;
+  --card-alpha: 0.04;
+}
+
+[data-mode='wake'] {
+  color-scheme: light;
+  --void: 236 234 229;
+  --ink: 17 17 20;
+  --dim: 98 97 104;
+  --line: 17 17 20;
+  --card: 255 255 255;
+  --signal: 24 78 214;
+  --loss: 196 22 98;
+  --output: 156 88 0;
+  --card-alpha: 0.55;
 }
 
 html {
-  background: #05060a;
+  background: rgb(var(--void));
+}
+
+/* Any subtree can opt into the other palette (the project diagrams always use Train). */
+[data-mode] {
+  color: rgb(var(--ink));
 }
 
 body {
-  background-color: #05060a;
+  background-color: rgb(var(--void));
   min-height: 100vh;
+  transition: background-color 0.6s ease;
 }
 
-/* Glass panel: a translucent fill, a 1px gradient border and a faint scanline overlay. */
+::selection {
+  background: rgb(var(--signal) / 0.25);
+}
+
+/* The mode switch wipes in a circle (see lib/mode.ts). The old view stays put underneath. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Panel: a soft fill and a hairline border. Train mode adds the gradient edge and scanlines. */
 .glass {
   position: relative;
   isolation: isolate;
   border-radius: 14px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgb(var(--line) / 0.1);
+  background: rgb(var(--card) / var(--card-alpha));
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
 }
 
-.glass::before {
+[data-mode='train'] .glass {
+  border-color: transparent;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+}
+
+[data-mode='train'] .glass::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -38,7 +86,7 @@ body {
   mask-composite: exclude;
 }
 
-.glass::after {
+[data-mode='train'] .glass::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -48,17 +96,65 @@ body {
   z-index: -1;
 }
 
+/* An opaque panel, for overlays that sit on top of busy content. */
+.glass.glass-solid {
+  background: rgb(var(--void) / 0.94);
+}
+
 .glass-chip {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgb(var(--line) / 0.14);
+  border-radius: 999px;
+  background: rgb(var(--card) / var(--card-alpha));
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   transition: border-color 0.2s, color 0.2s, background-color 0.2s;
 }
 
 .glass-chip:hover {
-  border-color: rgba(0, 240, 255, 0.4);
+  border-color: rgb(var(--signal) / 0.5);
+}
+
+/* Small uppercase mono label, used for (01)-style section markers. */
+.label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Oversized display type. Sizes come from the component; this sets the feel. */
+.mega {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 0.86;
+}
+
+.serif {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Project card wall: the 3D tilt is applied inline from scroll progress. */
+.wall {
+  perspective: 1600px;
+}
+
+.wall-plane {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.wall-card {
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.45s, border-color 0.3s;
+}
+
+.wall-card:hover,
+.wall-card:focus-within {
+  transform: translateZ(40px) translateY(-6px);
+  box-shadow: 0 30px 60px -30px rgb(var(--ink) / 0.35);
 }
 
 /* Holographic label above a hovered galaxy cluster. */
@@ -93,8 +189,8 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #00f0ff;
-  box-shadow: 0 0 10px #00f0ff;
+  background: rgb(var(--signal));
+  box-shadow: 0 0 10px rgb(var(--signal));
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -104,7 +200,7 @@ body {
   height: 0.85em;
   margin-left: 6px;
   vertical-align: -0.1em;
-  background: #00f0ff;
+  background: rgb(var(--signal));
   animation: blink 1s steps(1) infinite;
 }
 
@@ -121,6 +217,7 @@ body {
 
 /* Scanline overlay across the whole viewport. */
 .scanlines {
+  display: none;
   position: fixed;
   inset: 0;
   z-index: 2;
@@ -134,15 +231,23 @@ body {
   top: -4rem;
   z-index: 200;
   padding: 0.5rem 0.75rem;
-  background: #05060a;
-  color: #00f0ff;
-  border: 1px solid #00f0ff;
+  background: rgb(var(--void));
+  color: rgb(var(--signal));
+  border: 1px solid rgb(var(--signal));
   border-radius: 6px;
   transition: top 0.2s;
 }
 
 .skip-link:focus {
   top: 1rem;
+}
+
+[data-mode='train'] .scanlines {
+  display: block;
+}
+
+[data-mode='wake'] .noise-field {
+  opacity: 0.035;
 }
 
 /* Easter egg: overfitting mode. Everything memorises the colour and jitters. */

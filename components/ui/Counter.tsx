@@ -54,7 +54,7 @@ export default function Counter({ value, decimals = 0, suffix = '', duration = 1
   }, [value, decimals, suffix, duration]);
 
   return (
-    <span ref={ref} className={`font-mono tabular-nums ${className ?? ''}`}>
+    <span ref={ref} className={`${className?.includes('font-') ? '' : 'font-mono'} tabular-nums ${className ?? ''}`}>
       {format(value)}
     </span>
   );

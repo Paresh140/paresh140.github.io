@@ -1,51 +1,70 @@
 'use client';
 
-// Layer 0. The 3D word "PARESH" denoises behind this text. The text stays readable and
-// the word is a visual, so the h1 for screen readers lives here.
-import { useEffect, useRef } from 'react';
+// (00) Hero. Oversized name split across the width, with the glass crystal from
+// the 3D layer sitting between the two words. In Train mode the particle name
+// from the latent-space scene shows through instead.
+import { motion } from 'framer-motion';
 import { profile } from '@/data/profile';
-import { live } from '@/lib/live';
 import { useStore } from '@/lib/store';
-import Typewriter from '../ui/Typewriter';
+import CycleWord from '../ui/CycleWord';
+
+const [first, last] = profile.name.split(' ');
+
+const rise = (delay: number) => ({
+  initial: { y: '110%' },
+  animate: { y: '0%' },
+  transition: { duration: 1.1, delay, ease: [0.7, 0, 0.2, 1] },
+});
 
 export default function Hero() {
   const ready = useStore((s) => s.ready);
-  const t = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      if (t.current) t.current.textContent = String(Math.round((1 - live.heroT) * 1000));
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  const mode = useStore((s) => s.mode);
+  const train = mode === 'train';
 
   return (
-    <section id="top" data-layer="0" className="relative flex min-h-screen flex-col justify-end px-4 pb-16 md:px-16 md:pb-24">
-      <h1 className="sr-only">{profile.name}, data scientist and AI/ML engineer</h1>
+    <section id="top" data-layer="0" className="relative flex min-h-[100svh] flex-col justify-between px-4 pb-8 pt-24 md:px-8 md:pb-10">
+      <h1 className="sr-only">
+        {profile.name}, {profile.role}. {profile.headline}
+      </h1>
 
-      <p className="mb-4 font-mono text-xs tracking-[0.2em] text-signal">
-        diffusion denoising · t = <span ref={t}>1000</span> → 0
-      </p>
+      <div className="label flex justify-between text-dim">
+        <span>(00) {profile.role}</span>
+        <span className="hidden sm:block">{profile.location}</span>
+      </div>
 
-      <p className="max-w-3xl font-display text-3xl font-semibold leading-tight text-ink md:text-5xl">
-        <Typewriter text={profile.headline} start={ready} />
-      </p>
+      {/* The name. Hidden in Train mode, where the particle name takes over. */}
+      <div aria-hidden className={`mega select-none text-ink transition-opacity duration-700 ${train ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="overflow-hidden pb-[0.06em]">
+          {ready && (
+            <motion.div {...rise(0.1)} className="text-[min(23vw,20rem)] md:text-[min(19vw,20rem)]">
+              {first}
+            </motion.div>
+          )}
+        </div>
+        <div className="overflow-hidden pb-[0.06em] text-right">
+          {ready && (
+            <motion.div {...rise(0.22)} className="text-[min(23vw,20rem)] md:text-[min(19vw,20rem)]">
+              {last}
+            </motion.div>
+          )}
+        </div>
+      </div>
 
-      <p className="mt-6 max-w-xl text-sm leading-relaxed text-dim md:text-base">{profile.status}.</p>
-
-      <div className="mt-8 flex flex-wrap gap-3 font-mono text-xs uppercase tracking-[0.15em]">
-        <a href="#projects" className="glass-chip px-5 py-3 text-signal hover:bg-signal/10">
-          Enter the galaxy
-        </a>
-        <a href={profile.resume} download className="glass-chip px-5 py-3 text-ink hover:text-output">
-          Download resume
-        </a>
-        <a href="#contact" className="glass-chip px-5 py-3 text-ink hover:text-loss">
-          Hire me
-        </a>
+      <div className="grid items-end gap-8 md:grid-cols-[1.4fr_1fr]">
+        <p aria-hidden className="text-[clamp(1.6rem,3.6vw,3.25rem)] font-medium leading-[1.05] tracking-[-0.03em] text-ink">
+          {profile.headlineLead} <CycleWord words={profile.headlineWords} />
+        </p>
+        <div className="space-y-5 md:justify-self-end md:text-right">
+          <p className="max-w-sm text-sm leading-relaxed text-dim md:ml-auto">{profile.status}.</p>
+          <div className="label flex flex-wrap gap-2 md:justify-end">
+            <a href="#projects" className="glass-chip px-4 py-2.5 text-ink hover:text-signal">
+              See the work ↓
+            </a>
+            <a href={profile.resume} download className="glass-chip px-4 py-2.5 text-ink hover:text-signal">
+              Resume ↗
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
