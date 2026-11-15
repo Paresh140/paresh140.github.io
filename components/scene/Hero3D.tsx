@@ -61,9 +61,8 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
   // Load the head scan; fall back to the word if it is missing.
   useEffect(() => {
     let alive = true;
-    // The head needs more, smaller points than the word to read as a face:
-    // 3x the device budget, capped by what the scan holds.
-    const budget = count * 3;
+    // The head gets twice the device budget, capped by what the scan holds.
+    const budget = count * 2;
     const start = new Float32Array(budget * 3);
     const seed = new Float32Array(budget);
     for (let i = 0; i < budget; i++) {
@@ -110,18 +109,18 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
       new THREE.ShaderMaterial({
         vertexShader: vert,
         fragmentShader: frag,
-        // Opaque discs with depth: the face hides the back of the head, which is
-        // what makes the cloud read as a person rather than a glowing blob.
+        // Additive glow like the rest of Train mode. Depth writes stay on so the
+        // face still hides most of the back of the head.
         transparent: true,
         depthWrite: true,
         depthTest: true,
-        blending: THREE.NormalBlending,
+        blending: THREE.AdditiveBlending,
         uniforms: {
           uT: { value: 0 },
           uTime: { value: 0 },
           uMouse: { value: new THREE.Vector3(9999, 9999, 0) },
           uDissolve: { value: 0 },
-          uSize: { value: 23 },
+          uSize: { value: 36 },
           uPixelRatio: { value: 1 },
           uCyan: { value: new THREE.Color('#00F0FF') },
           uMagenta: { value: new THREE.Color('#FF2E88') },
