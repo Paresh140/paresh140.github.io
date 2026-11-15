@@ -1,8 +1,8 @@
 'use client';
 
 // (00) Hero. Oversized name split across the width, with the glass crystal from
-// the 3D layer sitting between the two words. In Train mode the particle name
-// from the latent-space scene shows through instead.
+// the 3D layer sitting between the two words. In Train mode the name becomes an
+// outline and the particle head from the latent-space scene shows through.
 import { motion } from 'framer-motion';
 import { profile } from '@/data/profile';
 import { useStore } from '@/lib/store';
@@ -32,8 +32,13 @@ export default function Hero() {
         <span className="hidden sm:block">{profile.location}</span>
       </div>
 
-      {/* The name. Hidden in Train mode, where the particle name takes over. */}
-      <div aria-hidden className={`mega select-none text-ink transition-opacity duration-700 ${train ? 'opacity-0' : 'opacity-100'}`}>
+      {/* The name. In Train mode it turns to an outline, so the particle head shows through. */}
+      <div
+        aria-hidden
+        className={`mega select-none transition-colors duration-700 ${
+          train ? 'text-transparent [-webkit-text-stroke:1px_rgb(var(--ink)/0.4)]' : 'text-ink'
+        }`}
+      >
         <div className="overflow-hidden pb-[0.06em]">
           {ready && (
             <motion.div {...rise(0.1)} className="text-[min(23vw,20rem)] md:text-[min(19vw,20rem)]">

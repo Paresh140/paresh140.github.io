@@ -12,10 +12,12 @@ uniform float uPixelRatio;
 attribute vec3 aTarget;
 attribute vec3 aStart;
 attribute float aSeed;
+attribute float aShade;   // brightness from the scan's colour: hair and glasses read darker
 
 varying float vNoise;
 varying float vAttn;
 varying float vAlpha;
+varying float vShade;
 
 float hash(float n) {
   return fract(sin(n) * 43758.5453);
@@ -55,4 +57,5 @@ void main() {
   vNoise = noiseAmt;
   vAttn = attn;
   vAlpha = 1.0 - uDissolve;
+  vShade = aShade;
 }
