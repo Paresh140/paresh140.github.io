@@ -11,6 +11,7 @@ export default function Hud({ particles }: { particles: number }) {
   const bar = useRef<HTMLDivElement>(null);
   const denoise = useRef<HTMLSpanElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const count = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -21,6 +22,7 @@ export default function Hud({ particles }: { particles: number }) {
       if (bar.current) bar.current.style.width = `${pct}%`;
       // Stay out of the hero, where the call-to-action buttons sit.
       if (root.current) root.current.style.opacity = live.activeSection === 0 ? '0' : '1';
+      if (count.current && live.particles) count.current.textContent = live.particles.toLocaleString('en-US');
       if (denoise.current) denoise.current.textContent = `${Math.round((1 - live.heroT) * 1000)}`;
       raf = requestAnimationFrame(tick);
     };
@@ -37,7 +39,7 @@ export default function Hud({ particles }: { particles: number }) {
         </div>
         <div className="flex justify-between">
           <span>particles</span>
-          <span className="text-signal">{particles.toLocaleString('en-US')}</span>
+          <span className="text-signal" ref={count}>{particles.toLocaleString('en-US')}</span>
         </div>
         <div className="flex justify-between">
           <span>t</span>
