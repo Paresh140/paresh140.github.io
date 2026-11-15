@@ -16,6 +16,7 @@ import { SECTION_COUNT, cameraPath, lookPath } from '@/lib/curve';
 import { galaxyCenter } from '@/lib/galaxy';
 import Hero3D from './Hero3D';
 import Field from './Field';
+import Wake3D from './Wake3D';
 
 // Heavy 3D pieces load on demand, so the first paint stays light.
 const Galaxy3D = lazy(() => import('./Galaxy3D'));
@@ -24,6 +25,8 @@ const Neural3D = lazy(() => import('./Neural3D'));
 
 export default function Scene() {
   const caps = useCaps();
+  const mode = useStore((s) => s.mode);
+  const wake = mode === 'wake';
   const [dpr, setDpr] = useState(1.75);
   const [visible, setVisible] = useState(true);
 
@@ -50,22 +53,46 @@ export default function Scene() {
         dpr={[1, caps.lowEnd ? 1 : dpr]}
         frameloop={visible ? 'always' : 'never'}
         camera={{ position: [0, 0, 10], fov: 45, near: 0.1, far: 200 }}
-        gl={{ antialias: !caps.lowEnd, alpha: false, powerPreference: 'high-performance' }}
-        onCreated={({ gl }) => gl.setClearColor('#05060A', 1)}
+        gl={{ antialias: !caps.lowEnd, alpha: true, powerPreference: 'high-performance' }}
       >
+        <ClearColor wake={wake} />
         <PerformanceMonitor onDecline={() => setDpr(0.9)} onIncline={() => setDpr(1.75)} />
-        <CameraRig reduced={caps.reduced} />
-        <Suspense fallback={null}>
-          <Hero3D count={caps.particles} width={caps.mobile ? 3.2 : 9} reduced={caps.reduced} />
-          <Field reduced={caps.reduced} />
-          <Galaxy3D reduced={caps.reduced} />
-          <Terrain3D reduced={caps.reduced} />
-          <Neural3D reduced={caps.reduced} />
-        </Suspense>
-        {caps.postprocessing && <PostFX />}
+        {wake ? (
+          // Wake: the page colour shows through, with the glass crystal on top.
+          <Suspense fallback={null}>
+            <Wake3D mobile={caps.mobile} lowEnd={caps.lowEnd} reduced={caps.reduced} />
+          </Suspense>
+        ) : (
+          // Train: the full latent-space scene, flown through on a camera spline.
+          <>
+            <CameraRig reduced={caps.reduced} />
+            <Suspense fallback={null}>
+              <Hero3D count={caps.particles} width={caps.mobile ? 3.2 : 9} reduced={caps.reduced} />
+              <Field reduced={caps.reduced} />
+              <Galaxy3D reduced={caps.reduced} />
+              <Terrain3D reduced={caps.reduced} />
+              <Neural3D reduced={caps.reduced} />
+            </Suspense>
+            {caps.postprocessing && <PostFX />}
+          </>
+        )}
       </Canvas>
     </div>
   );
+}
+
+// Wake mode lets the CSS page colour show through; Train paints the void.
+// Switching modes also puts the camera back where each scene expects it.
+function ClearColor({ wake }: { wake: boolean }) {
+  const { gl, camera } = useThree();
+  useEffect(() => {
+    gl.setClearColor('#05060A', wake ? 0 : 1);
+    if (wake) {
+      camera.position.set(0, 0, 10);
+      camera.lookAt(0, 0, 0);
+    }
+  }, [gl, camera, wake]);
+  return null;
 }
 
 // Maps the scroll position onto the camera spline. Each section holds its waypoint

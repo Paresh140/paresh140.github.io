@@ -3,13 +3,13 @@
 // ⌘K / Ctrl+K command palette. Also opens the confusion-matrix view and the matrix mode toggle.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
+import { switchMode } from '@/lib/mode';
 
 type Command = { id: string; label: string; run: () => void };
 
 export default function CommandPalette() {
   const open = useStore((s) => s.paletteOpen);
   const setOpen = useStore((s) => s.setPaletteOpen);
-  const setGalaxyView = useStore((s) => s.setGalaxyView);
   const setConfusionOpen = useStore((s) => s.setConfusionOpen);
   const toggleMatrix = useStore((s) => s.toggleMatrix);
   const [query, setQuery] = useState('');
@@ -26,10 +26,10 @@ export default function CommandPalette() {
       { id: 'resume', label: 'download resume', run: downloadResume },
       { id: 'matrix', label: 'toggle matrix mode', run: toggleMatrix },
       { id: 'confusion', label: 'show confusion matrix', run: () => setConfusionOpen(true) },
-      { id: 'grid', label: 'view projects as grid', run: () => setGalaxyView('grid') },
-      { id: 'galaxy', label: 'view projects as galaxy', run: () => setGalaxyView('galaxy') },
+      { id: 'wake', label: 'switch to wake mode', run: () => switchMode('wake') },
+      { id: 'train', label: 'switch to train mode', run: () => switchMode('train') },
     ],
-    [toggleMatrix, setConfusionOpen, setGalaxyView],
+    [toggleMatrix, setConfusionOpen],
   );
 
   const results = commands.filter((c) => c.label.includes(query.trim().toLowerCase()));

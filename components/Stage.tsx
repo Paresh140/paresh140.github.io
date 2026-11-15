@@ -12,11 +12,12 @@ const Scene = dynamic(() => import('./scene/Scene'), { ssr: false });
 export default function Stage() {
   const caps = useCaps();
   const focused = useStore((s) => s.focusedProject);
+  const mode = useStore((s) => s.mode);
   return (
     <>
       <Scene />
-      {/* The HUD steps aside while a case study panel is open. */}
-      {caps.ready && !focused && <Hud particles={caps.particles} />}
+      {/* The HUD belongs to Train mode, and steps aside while a case study panel is open. */}
+      {caps.ready && !focused && mode === 'train' && <Hud particles={caps.particles} />}
     </>
   );
 }

@@ -4,6 +4,10 @@
 export const profile = {
   name: 'Paresh Subedi',
   headline: 'I turn noisy data into decisions.',
+  // The hero rolls through these inside "(…)": "I turn noisy data into (decisions)".
+  headlineLead: 'I turn noisy data into',
+  headlineWords: ['decisions', 'models', 'dashboards', 'answers'],
+  role: 'Data scientist & AI/ML engineer',
   status: 'Open to Data & Analytics, ML Engineering and AI Systems roles',
   location: 'Queens, NY',
   site: 'pareshsubedi.com.np', // shown in the contact curl example

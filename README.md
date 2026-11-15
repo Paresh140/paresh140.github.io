@@ -2,6 +2,13 @@
 
 A portfolio that is shaped like a neural network's latent space. The visitor is a data point, scrolling is a forward pass, and every section is a layer that transforms what they see. One persistent WebGL canvas sits behind all the content, and the camera flies a CatmullRom spline as you scroll.
 
+The site has two modes, switched from the pill in the top-right corner (or ⌘K → "switch to train mode"):
+
+- **Wake** (default): a light, editorial read. Oversized type, numbered `(01)` sections, a faceted glass "neural crystal" with latent points inside that moves to a new spot for each section, and the projects as a card wall that tilts flat as it scrolls in.
+- **Train**: the dark latent-space version, with the particle name, embedding galaxy, loss landscape, neural net and HUD.
+
+The choice is remembered per browser, and `?mode=train` or `?mode=wake` in the URL forces one. The colours are CSS tokens in `app/globals.css` (`[data-mode='wake']` and `[data-mode='train']`), so every component uses the same Tailwind classes in both modes.
+
 Built with Next.js 14 (App Router), TypeScript, Tailwind, React Three Fiber, drei, postprocessing, GSAP + ScrollTrigger, Lenis and Framer Motion.
 
 ## Run it
@@ -29,15 +36,14 @@ Everything you'd edit lives in `data/`. No component needs touching for copy cha
 
 These are marked in the source and shown in the UI as written, so they can't pass for real claims:
 
-- **Project metrics** (`data/projects.ts`): every `metric.value` is `0` and labelled `PLACEHOLDER`. Replace with real numbers.
-- **Project links**: the GitHub links point at your profile. Point each one at its repo, and add `demo` where one exists.
+- **Project metrics and links** (`data/projects.ts`): `metric` and `github` are optional. A project without a metric shows its `status` (for example "Research in progress") instead of a number, and the GitHub button only appears when `github` is set. Add them as results and public repos become available.
 - **Confusion matrix** (`data/metrics.ts`): illustrative values. Paste in your evaluation output.
 - **Skill depths** (`data/skills.ts`): these are tuning values, not measurements. Set them to whatever feels honest.
 - **Site URL**: `metadataBase` in `app/layout.tsx` and `profile.site` in `data/profile.ts` are set to `pareshsubedi.com.np`.
 
 ## Adding a project
 
-Add an entry to `data/projects.ts`. Pick a `cluster` (`signal` for data, `loss` for learning, `output` for results) and a `position` for its cluster in the galaxy. Keep clusters apart from each other, or they will sit on top of one another in the galaxy. The `visual` field picks the detail diagram: `sparsity`, `spectrogram`, `embedding` or `graph`.
+Add an entry to `data/projects.ts`; the card wall shows them in array order. Pick a `cluster` (`signal` for data, `loss` for learning, `output` for results) and a `position` for its cluster in the galaxy. Keep clusters apart from each other, or they will sit on top of one another in the galaxy. The `visual` field picks the detail diagram: `sparsity`, `spectrogram`, `embedding` or `graph`.
 
 ## Contact form
 

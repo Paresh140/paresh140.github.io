@@ -5,16 +5,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        void: '#05060A',
-        signal: '#00F0FF', // data
-        loss: '#FF2E88', // error / learning
-        output: '#FFB800', // results
-        ink: '#C9D3E0',
-        dim: '#6B7689',
+        // Every colour is a token from app/globals.css, so Wake and Train share one class list.
+        void: 'rgb(var(--void) / <alpha-value>)',
+        signal: 'rgb(var(--signal) / <alpha-value>)', // data
+        loss: 'rgb(var(--loss) / <alpha-value>)', // error / learning
+        output: 'rgb(var(--output) / <alpha-value>)', // results
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        dim: 'rgb(var(--dim) / <alpha-value>)',
+        line: 'rgb(var(--line) / <alpha-value>)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+        serif: ['var(--font-serif)', 'Georgia', 'serif'],
       },
     },
   },

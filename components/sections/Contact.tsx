@@ -4,6 +4,7 @@
 // the visitor's mail app with the message already written.
 import { useState, type FormEvent } from 'react';
 import { profile } from '@/data/profile';
+import SectionLabel from '../ui/SectionLabel';
 
 const NODES = [
   { label: 'email', href: `mailto:${profile.email}`, external: false },
@@ -26,13 +27,16 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" data-layer="5" className="relative flex min-h-screen items-center px-4 py-24 md:px-16">
-      <div className="mx-auto w-full max-w-3xl">
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-signal">layer 05 · inference endpoint</p>
-        <h2 className="mt-2 font-display text-4xl font-semibold text-ink md:text-6xl">Hire me</h2>
+    <section id="contact" data-layer="5" className="relative flex min-h-screen items-center px-4 py-28 md:px-8">
+      <div className="w-full max-w-4xl">
+        <SectionLabel n={5} wake="Contact" train="inference endpoint" />
+        <h2 className="mega mt-6 text-[clamp(3.5rem,12vw,11rem)] text-ink">
+          Let&apos;s <span className="serif text-signal">talk</span>.
+        </h2>
+        <p className="mt-6 max-w-xl text-base leading-relaxed text-dim">{profile.status}. Tell me what you are building.</p>
 
         <div className="glass mt-8 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-white/10 px-4 py-2">
+          <div className="flex items-center gap-2 border-b border-line/10 px-4 py-2">
             <span className="h-2.5 w-2.5 rounded-full bg-loss/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-output/70" />
             <span className="h-2.5 w-2.5 rounded-full bg-signal/70" />
@@ -51,7 +55,7 @@ export default function Contact() {
                 required
                 maxLength={200}
                 placeholder="ML engineer, analytics lead…"
-                className="mt-1 w-full rounded bg-void px-3 py-2 text-ink outline-none ring-1 ring-white/15 focus:ring-signal"
+                className="mt-1 w-full rounded bg-void px-3 py-2 text-ink outline-none ring-1 ring-line/15 focus:ring-signal"
               />
             </label>
 
@@ -64,7 +68,7 @@ export default function Contact() {
                 maxLength={4000}
                 rows={4}
                 placeholder="What are you building?"
-                className="mt-1 w-full rounded bg-void px-3 py-2 text-ink outline-none ring-1 ring-white/15 focus:ring-signal"
+                className="mt-1 w-full rounded bg-void px-3 py-2 text-ink outline-none ring-1 ring-line/15 focus:ring-signal"
               />
             </label>
 

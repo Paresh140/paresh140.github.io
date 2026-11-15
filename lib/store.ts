@@ -3,7 +3,14 @@
 import { create } from 'zustand';
 import type { Optimizer } from '@/data/skills';
 
+// Two ways to see the site. `wake` is the light editorial read for a quick scan;
+// `train` is the dark latent-space version with the full 3D scenes.
+export type Mode = 'wake' | 'train';
+
 type Store = {
+  mode: Mode;
+  setMode: (mode: Mode) => void;
+
   ready: boolean;
   setReady: (ready: boolean) => void;
 
@@ -33,6 +40,9 @@ type Store = {
 };
 
 export const useStore = create<Store>((set) => ({
+  mode: 'wake',
+  setMode: (mode) => set({ mode }),
+
   ready: false,
   setReady: (ready) => set({ ready }),
 
