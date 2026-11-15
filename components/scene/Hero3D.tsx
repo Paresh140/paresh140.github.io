@@ -15,33 +15,39 @@ import frag from '@/shaders/hero.frag.glsl';
 
 const WORD = 'PARESH';
 const FONT = '600 260px "Inter Tight", sans-serif';
-// Float32 records of [x, y, z, shade], about 1 unit tall, in random order so any
-// prefix is an even sample. Built from the scan by scripts in the PR description.
+// Packed point cloud: a uint32 count n, then n int16 xyz (scaled so 32767 = 0.8
+// units, about 1 unit tall), then n uint8 rgb from the scan. Points are in random
+// order, so any prefix is an even sample.
 const HEAD_URL = './head.bin';
-const HEAD_STRIDE = 4;
+const HEAD_RANGE = 0.8;
 const DENOISE_SECONDS = 4.5;
 const NEIGHBOURS = 10;
+// How far particles lean toward the pointer. Kept small so the face keeps its shape.
+const LEAN = 0.08;
 
-type Particles = { target: Float32Array; start: Float32Array; seed: Float32Array; shade: Float32Array };
+type Particles = { target: Float32Array; start: Float32Array; seed: Float32Array; color: Float32Array };
 
 async function loadHead(count: number, height: number, offset: [number, number]) {
   const res = await fetch(HEAD_URL);
   if (!res.ok) throw new Error(`head.bin ${res.status}`);
-  const raw = new Float32Array(await res.arrayBuffer());
-  const n = Math.floor(raw.length / HEAD_STRIDE);
-  if (!n) throw new Error('head.bin is empty');
-  const target = new Float32Array(count * 3);
-  const shade = new Float32Array(count);
-  for (let i = 0; i < count; i++) {
-    const j = (i % n) * HEAD_STRIDE;
-    // Repeats (when count > n) get a hair of jitter so they don't stack.
-    const jitter = i >= n ? 0.004 : 0;
-    target[i * 3] = (raw[j] + (Math.random() - 0.5) * jitter) * height + offset[0];
-    target[i * 3 + 1] = (raw[j + 1] + (Math.random() - 0.5) * jitter) * height + offset[1];
-    target[i * 3 + 2] = raw[j + 2] * height;
-    shade[i] = raw[j + 3];
+  const buf = await res.arrayBuffer();
+  const n = new DataView(buf).getUint32(0, true);
+  if (!n || buf.byteLength < 4 + n * 9) throw new Error('head.bin is malformed');
+  const xyz = new Int16Array(buf.slice(4, 4 + n * 6));
+  const rgb = new Uint8Array(buf, 4 + n * 6, n * 3);
+  const k = (HEAD_RANGE / 32767) * height;
+  const used = Math.min(count, n);
+  const target = new Float32Array(used * 3);
+  const color = new Float32Array(used * 3);
+  for (let i = 0; i < used; i++) {
+    target[i * 3] = xyz[i * 3] * k + offset[0];
+    target[i * 3 + 1] = xyz[i * 3 + 1] * k + offset[1];
+    target[i * 3 + 2] = xyz[i * 3 + 2] * k;
+    color[i * 3] = rgb[i * 3] / 255;
+    color[i * 3 + 1] = rgb[i * 3 + 1] / 255;
+    color[i * 3 + 2] = rgb[i * 3 + 2] / 255;
   }
-  return { target, shade };
+  return { target, color };
 }
 
 const smooth = (x: number) => {
@@ -55,9 +61,12 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
   // Load the head scan; fall back to the word if it is missing.
   useEffect(() => {
     let alive = true;
-    const start = new Float32Array(count * 3);
-    const seed = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
+    // The head needs more, smaller points than the word to read as a face:
+    // 3x the device budget, capped by what the scan holds.
+    const budget = count * 3;
+    const start = new Float32Array(budget * 3);
+    const seed = new Float32Array(budget);
+    for (let i = 0; i < budget; i++) {
       start[i * 3] = gaussian() * 3.2;
       start[i * 3 + 1] = gaussian() * 3.2;
       start[i * 3 + 2] = gaussian() * 1.2;
@@ -68,13 +77,15 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
     const height = mobile ? 3.6 : 6.6;
     const offset: [number, number] = mobile ? [0.2, 0.6] : [1.2, 0.1];
 
-    loadHead(count, height, offset)
+    loadHead(budget, height, offset)
       .catch(async () => {
         await document.fonts.load(FONT).catch(() => undefined);
-        return { target: sampleText(WORD, count, width, FONT), shade: new Float32Array(count).fill(1) };
+        return { target: sampleText(WORD, count, width, FONT), color: new Float32Array(count * 3).fill(-1) };
       })
-      .then(({ target, shade }) => {
-        if (alive) setData({ target, start, seed, shade });
+      .then(({ target, color }) => {
+        const n = target.length / 3;
+        live.particles = n;
+        if (alive) setData({ target, start: start.subarray(0, n * 3), seed: seed.subarray(0, n), color });
       });
     return () => {
       alive = false;
@@ -89,7 +100,7 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
     g.setAttribute('aTarget', new THREE.BufferAttribute(data.target, 3));
     g.setAttribute('aStart', new THREE.BufferAttribute(data.start, 3));
     g.setAttribute('aSeed', new THREE.BufferAttribute(data.seed, 1));
-    g.setAttribute('aShade', new THREE.BufferAttribute(data.shade, 1));
+    g.setAttribute('aColor', new THREE.BufferAttribute(data.color, 3));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 30);
     return g;
   }, [data]);
@@ -99,15 +110,18 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
       new THREE.ShaderMaterial({
         vertexShader: vert,
         fragmentShader: frag,
+        // Opaque discs with depth: the face hides the back of the head, which is
+        // what makes the cloud read as a person rather than a glowing blob.
         transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        depthWrite: true,
+        depthTest: true,
+        blending: THREE.NormalBlending,
         uniforms: {
           uT: { value: 0 },
           uTime: { value: 0 },
           uMouse: { value: new THREE.Vector3(9999, 9999, 0) },
           uDissolve: { value: 0 },
-          uSize: { value: 38 },
+          uSize: { value: 23 },
           uPixelRatio: { value: 1 },
           uCyan: { value: new THREE.Color('#00F0FF') },
           uMagenta: { value: new THREE.Color('#FF2E88') },
@@ -159,13 +173,15 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
       mouse.current.lerp(hit, 1 - Math.exp(-dt * 10));
     }
 
-    // The head turns a little toward the pointer, with a slow idle sway.
+    // The head follows the pointer: sweeping from the left edge to the right turns
+    // it about 100 degrees, and up/down nods it a little. A slow sway keeps it alive.
     if (group.current) {
-      const sway = reduced ? 0 : Math.sin(state.clock.elapsedTime * 0.35) * 0.18;
-      const yaw = reduced ? 0 : live.ndc.x * 0.45 + sway;
-      const pitch = reduced ? 0 : -live.ndc.y * 0.12;
-      group.current.rotation.y += (yaw - group.current.rotation.y) * (1 - Math.exp(-dt * 3));
-      group.current.rotation.x += (pitch - group.current.rotation.x) * (1 - Math.exp(-dt * 3));
+      const sway = reduced ? 0 : Math.sin(state.clock.elapsedTime * 0.4) * 0.08;
+      const yaw = reduced ? 0 : live.ndc.x * 0.9 + sway;
+      const pitch = reduced ? 0 : -live.ndc.y * 0.22;
+      const ease = 1 - Math.exp(-dt * 5);
+      group.current.rotation.y += (yaw - group.current.rotation.y) * ease;
+      group.current.rotation.x += (pitch - group.current.rotation.x) * ease;
     }
 
     const u = material.uniforms;
@@ -181,7 +197,10 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
     const my = mouse.current.y;
     const bestI = new Int32Array(NEIGHBOURS).fill(-1);
     const bestD = new Float32Array(NEIGHBOURS).fill(Infinity);
-    for (let i = 0; i < count; i++) {
+    const n = t.length / 3;
+    // Stride through the cloud: the lines only need the nearest few, not every point.
+    const step = n > 30000 ? 3 : 1;
+    for (let i = 0; i < n; i += step) {
       const dx = t[i * 3] - mx;
       const dy = t[i * 3 + 1] - my;
       const d = dx * dx + dy * dy;
@@ -203,8 +222,8 @@ export default function Hero3D({ count, width, reduced }: { count: number; width
       const x = t[i * 3];
       const y = t[i * 3 + 1];
       const dd = (x - mx) * (x - mx) + (y - my) * (y - my);
-      const attn = Math.exp(-dd * 0.35);
-      return [x + (mx - x) * attn * 0.25, y + (my - y) * attn * 0.25];
+      const attn = Math.exp(-dd * 1.2);
+      return [x + (mx - x) * attn * LEAN, y + (my - y) * attn * LEAN];
     };
     let v = 0;
     const put = (x: number, y: number) => {

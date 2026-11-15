@@ -12,12 +12,12 @@ uniform float uPixelRatio;
 attribute vec3 aTarget;
 attribute vec3 aStart;
 attribute float aSeed;
-attribute float aShade;   // brightness from the scan's colour: hair and glasses read darker
+attribute vec3 aColor;    // the scan's colour; x < 0 means none (the word fallback)
 
 varying float vNoise;
 varying float vAttn;
 varying float vAlpha;
-varying float vShade;
+varying vec3 vColor;
 
 float hash(float n) {
   return fract(sin(n) * 43758.5453);
@@ -41,8 +41,8 @@ void main() {
   // Attention: particles near the query lean toward it.
   vec3 toQuery = uMouse - pos;
   float d = length(toQuery);
-  float attn = exp(-d * d * 0.35);
-  pos += toQuery * attn * 0.25;
+  float attn = exp(-d * d * 1.2);
+  pos += toQuery * attn * 0.08;
 
   // Dissolve: stream forward toward the camera and fan out.
   float dir = hash(aSeed * 91.7) - 0.5;
@@ -57,5 +57,5 @@ void main() {
   vNoise = noiseAmt;
   vAttn = attn;
   vAlpha = 1.0 - uDissolve;
-  vShade = aShade;
+  vColor = aColor;
 }
